@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
+import { logger } from '../utils/logger';
 
 export function errorHandler(
     err: any,
@@ -8,8 +9,6 @@ export function errorHandler(
 ) {
     const status = err.status || 500;
     const message = err.message || 'Internal Server Error';
-    if (process.env.NODE_ENV !== 'production') {
-        console.error('[error]', err);
-    }
+    logger.error(`${_req.method} ${_req.originalUrl} -> ${status}`, err);
     res.status(status).json({ error: message });
 }

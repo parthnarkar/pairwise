@@ -5,6 +5,9 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { CustomerDetailPage } from './pages/CustomerDetailPage';
+import { MatchesHistoryPage } from './pages/MatchesHistoryPage';
+import { CandidatesPage } from './pages/CandidatesPage';
+import { ToastProvider } from './components/ToastProvider';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -20,8 +23,9 @@ export default function App() {
     return (
         <QueryClientProvider client={queryClient}>
             <AuthProvider>
-                <BrowserRouter>
-                    <Routes>
+                <ToastProvider>
+                    <BrowserRouter>
+                        <Routes>
                         <Route path="/login" element={<LoginPage />} />
                         <Route
                             path="/"
@@ -39,9 +43,26 @@ export default function App() {
                                 </ProtectedRoute>
                             }
                         />
+                        <Route
+                            path="/matches"
+                            element={
+                                <ProtectedRoute>
+                                    <MatchesHistoryPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/candidates"
+                            element={
+                                <ProtectedRoute>
+                                    <CandidatesPage />
+                                </ProtectedRoute>
+                            }
+                        />
                         <Route path="*" element={<Navigate to="/" replace />} />
-                    </Routes>
-                </BrowserRouter>
+                        </Routes>
+                    </BrowserRouter>
+                </ToastProvider>
             </AuthProvider>
         </QueryClientProvider>
     );

@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import { Customer, MatchAction } from '../models';
+import { Customer, MatchAction, MatchRevocation } from '../models';
 import { runMatching, getAge, scoreMatch, type EngineCustomer } from '../services/matchingEngine';
 import { generateRationale } from '../services/aiService';
 import { WEIGHTS, MIN_SCORE_THRESHOLD } from '../services/matchingConfig';
@@ -212,6 +212,14 @@ export async function sendMatch(req: Request, res: Response) {
             sentAt: new Date(),
         });
 
+        // NEW: Auto-update journey status to 'Matching' if it's currently 'Active Search'
+        if (customer.journeyStatus === 'Active Search') {
+            await Customer.updateOne(
+                { _id: customerId },
+                { $set: { journeyStatus: 'Matching' } }
+            );
+        }
+
         return res.status(201).json({
             matchActionId: String(action._id),
             compatibilityScore: roundedScore,
@@ -298,7 +306,7 @@ export async function getMatchHistory(req: Request, res: Response) {
 export async function getMatchStats(req: Request, res: Response) {
     const matchmakerId = req.matchmakerId!;
 
-    const [customersAssigned, activeSearches, matchesSent, accepted] =
+    const [customersAssigned, activeSearches, matchesSent, accepted, candidatesCount, recent] =
         await Promise.all([
             Customer.countDocuments({ assignedMatchmaker: matchmakerId }),
             Customer.countDocuments({
@@ -307,12 +315,138 @@ export async function getMatchStats(req: Request, res: Response) {
             }),
             MatchAction.countDocuments({ matchmakerId, status: 'Sent' }),
             MatchAction.countDocuments({ matchmakerId, status: 'Accepted' }),
+            Customer.countDocuments({ assignedMatchmaker: null }),
+            // NEW: Fetch the 4 most recent matches with populated names
+            MatchAction.find({ matchmakerId, status: 'Sent' })
+                .sort({ createdAt: -1 })
+                .limit(4)
+                .populate('customerId', 'firstName lastName')
+                .populate('candidateId', 'firstName lastName')
+                .lean(),
         ]);
+
+    const recentMatches = recent.map((m: any) => ({
+        id: String(m._id),
+        customerName: `${m.customerId?.firstName} ${m.customerId?.lastName}`,
+        candidateName: `${m.candidateId?.firstName} ${m.candidateId?.lastName}`,
+        score: m.compatibilityScore,
+        sentAt: m.sentAt || m.createdAt,
+    }));
 
     return res.json({
         customersAssigned,
         activeSearches,
         matchesSent,
         accepted,
+        candidatesCount,
+        recentMatches, // <-- Added this
     });
+}
+
+// ---------- DELETE /api/matches/:id ------------------------------------
+
+const revokeSchema = z.object({
+    revokeNote: z.string().trim().max(2000).optional().default(''),
+    clientMessage: z.string().trim().max(2000).optional().default(''),
+});
+
+export async function revokeMatch(req: Request, res: Response) {
+    const { id } = req.params;
+    const matchmakerId = req.matchmakerId!;
+
+    if (!mongoose.isValidObjectId(id)) {
+        return res.status(404).json({ error: 'Match not found' });
+    }
+
+    const parsed = revokeSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+        return res
+            .status(400)
+            .json({ error: 'Invalid revoke details', details: parsed.error.flatten() });
+    }
+
+    // Find and delete, ensuring this matchmaker owns the action
+    const deleted = await MatchAction.findOneAndDelete({
+        _id: id,
+        matchmakerId,
+    });
+
+    if (!deleted) {
+        return res.status(404).json({ error: 'Match not found' });
+    }
+
+    await MatchRevocation.create({
+        matchActionId: deleted._id,
+        customerId: deleted.customerId,
+        candidateId: deleted.candidateId,
+        matchmakerId,
+        revokeNote: parsed.data.revokeNote,
+        clientMessage: parsed.data.clientMessage,
+    });
+
+    if (parsed.data.revokeNote) {
+        await Customer.updateOne(
+            { _id: deleted.customerId, assignedMatchmaker: matchmakerId },
+            {
+                $push: {
+                    notes: {
+                        author: matchmakerId,
+                        text: `Match revoked: ${parsed.data.revokeNote}`,
+                        createdAt: new Date(),
+                    },
+                },
+            }
+        );
+    }
+
+    const remainingSent = await MatchAction.exists({
+        customerId: deleted.customerId,
+        matchmakerId,
+        status: 'Sent',
+    });
+    if (!remainingSent) {
+        await Customer.updateOne(
+            { _id: deleted.customerId, assignedMatchmaker: matchmakerId },
+            { $set: { journeyStatus: 'Active Search' } }
+        );
+    }
+
+    return res.json({
+        success: true,
+        message: 'Match revoked successfully',
+        hasRemainingSentMatches: Boolean(remainingSent),
+        revokeNote: parsed.data.revokeNote,
+        clientMessage: parsed.data.clientMessage,
+    });
+}
+
+// ---------- GET /api/matches/history (Global) --------------------------
+
+export async function getGlobalMatchHistory(req: Request, res: Response) {
+    const matchmakerId = req.matchmakerId!;
+
+    const actions = await MatchAction.find({ matchmakerId })
+        .sort({ createdAt: -1 })
+        .populate('customerId', 'firstName lastName city')
+        .populate('candidateId', 'firstName lastName city')
+        .lean();
+
+    const history = actions.map((a: any) => ({
+        id: String(a._id),
+        compatibilityScore: a.compatibilityScore,
+        status: a.status,
+        sentAt: a.sentAt ?? a.createdAt,
+        customer: {
+            id: a.customerId?._id,
+            name: `${a.customerId?.firstName} ${a.customerId?.lastName}`,
+            city: a.customerId?.city,
+        },
+        candidate: {
+            id: a.candidateId?._id,
+            name: `${a.candidateId?.firstName} ${a.candidateId?.lastName}`,
+            city: a.candidateId?.city,
+        },
+    }));
+
+    return res.json({ history });
 }

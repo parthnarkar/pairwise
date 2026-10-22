@@ -15,3 +15,6 @@ export type {
 
 export { MatchAction } from './MatchAction';
 export type { IMatchAction, MatchStatus } from './MatchAction';
+
+export { MatchRevocation } from './MatchRevocation';
+export type { IMatchRevocation } from './MatchRevocation';

@@ -235,6 +235,13 @@ export function CustomerDetailPage() {
                 open={matchesOpen}
                 onClose={() => setMatchesOpen(false)}
                 onSendSuccess={() => {
+                    // Reflect the backend's automatic Active Search -> Matching transition immediately.
+                    qc.setQueryData(['customer', id], (current: typeof customer | undefined) =>
+                        current?.journeyStatus === 'Active Search'
+                            ? { ...current, journeyStatus: 'Matching' }
+                            : current
+                    );
+                    qc.invalidateQueries({ queryKey: ['customer', id] });
                     qc.invalidateQueries({ queryKey: ['match-history', id] });
                     qc.invalidateQueries({ queryKey: ['match-stats'] });
                     qc.invalidateQueries({ queryKey: ['customers'] });

@@ -1,5 +1,6 @@
 import { api } from './axios';
 import type { ICustomerDetail, ICustomerListItem, JourneyStatus, INote } from '../types';
+import type { IMatchCandidate } from '../types';
 
 export interface ListParams {
     q?: string;
@@ -54,4 +55,9 @@ export async function listMyCities(): Promise<string[]> {
         '/customers/meta/cities'
     );
     return data.cities;
+}
+
+export async function listCandidatePool(): Promise<IMatchCandidate[]> {
+    const { data } = await api.get<{ candidates: IMatchCandidate[] }>('/customers/candidates');
+    return data.candidates;
 }

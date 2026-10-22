@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { LogOut, Search, Users, Activity, Send } from 'lucide-react';
+import { LogOut, Search, Users, Activity, Send, ChevronRight, UserRoundSearch } from 'lucide-react';
 import {
     listCustomers,
     listMyCities,
@@ -44,7 +44,7 @@ export function DashboardPage() {
         queryFn: () => listCustomers(filters),
     });
 
-    // Full city list (unfiltered) — Fix from Phase 3
+    // Full city list (unfiltered)
     const { data: cities = [] } = useQuery({
         queryKey: ['meta-cities'],
         queryFn: listMyCities,
@@ -72,7 +72,7 @@ export function DashboardPage() {
                     </div>
                     <button
                         onClick={logout}
-                        className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900"
+                        className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition"
                     >
                         <LogOut size={16} /> Sign out
                     </button>
@@ -81,7 +81,7 @@ export function DashboardPage() {
 
             <main className="max-w-7xl mx-auto px-6 py-6 space-y-4">
                 {/* Metrics row */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                     <MetricTile
                         label="Customers Assigned"
                         value={stats?.customersAssigned ?? '—'}
@@ -98,7 +98,36 @@ export function DashboardPage() {
                         hint={stats?.accepted ? `${stats.accepted} accepted` : undefined}
                         icon={<Send size={20} />}
                     />
+                    <MetricTile
+                        label="Candidate Pool"
+                        value={stats?.candidatesCount ?? '—'}
+                        hint="View all candidates"
+                        icon={<UserRoundSearch size={20} />}
+                        to="/candidates"
+                    />
                 </div>
+
+                {/* Recent Matches Row */}
+                {stats?.recentMatches && stats.recentMatches.length > 0 && (
+                    <div className="bg-white rounded-xl border border-slate-200 p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Recently Sent Matches</p>
+                            <Link to="/matches" className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 font-medium">
+                                View All History <ChevronRight size={14} />
+                            </Link>
+                        </div>
+                        <div className="flex flex-wrap gap-3">
+                            {stats.recentMatches.map((rm: any) => (
+                                <div key={rm.id} className="flex items-center gap-3 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
+                                    <span className="font-medium text-slate-900">{rm.customerName}</span>
+                                    <span className="text-slate-400">→</span>
+                                    <span className="font-medium text-slate-900">{rm.candidateName}</span>
+                                    <span className="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">{rm.score}pts</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Filters bar */}
                 <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap items-end gap-3">
@@ -240,7 +269,7 @@ export function DashboardPage() {
                                 {data.map((c) => (
                                     <tr
                                         key={c.id}
-                                        className="hover:bg-slate-50 cursor-pointer"
+                                        className="hover:bg-slate-50 cursor-pointer transition"
                                         onClick={() => navigate(`/customers/${c.id}`)}
                                     >
                                         <td className="px-4 py-3">

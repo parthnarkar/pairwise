@@ -5,6 +5,7 @@ import { connectDB } from './config/db';
 import { errorHandler } from './middleware/errorHandler';
 import morgan from 'morgan';
 import chalk from 'chalk';
+import { accessLogStream } from './utils/logger';
 
 import authRoutes from './routes/authRoutes';
 import matchmakerRoutes from './routes/matchmakerRoutes';
@@ -86,14 +87,16 @@ if (process.env.NODE_ENV !== 'production') {
                 chalk.gray(`(${duration})`),
             ].join(' ');
         }, {
-            skip: (req) => req.url === '/api/health',
+            stream: accessLogStream,
+            immediate: true,
         })
     );
 } else {
     // Production (Vercel): single-line JSON — parseable by log drains
     app.use(
         morgan('combined', {
-            skip: (req) => req.url === '/api/health',
+            stream: accessLogStream,
+            immediate: true,
         })
     );
 }

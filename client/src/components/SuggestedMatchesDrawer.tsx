@@ -232,6 +232,7 @@ export function SuggestedMatchesDrawer({
                 <SendMatchModal
                     open={!!sendingMatch}
                     customerId={customerId}
+                    customerName={customerName}
                     match={sendingMatch}
                     onClose={() => setSendingMatch(null)}
                     onSuccess={() => {

@@ -56,3 +56,20 @@ export async function fetchMatchStats(): Promise<IMatchesStats> {
     const { data } = await api.get<IMatchesStats>('/matches/stats');
     return data;
 }
+
+export interface RevokeMatchPayload {
+    revokeNote?: string;
+    clientMessage?: string;
+}
+
+export async function revokeMatch(
+    matchActionId: string,
+    payload: RevokeMatchPayload
+): Promise<void> {
+    await api.delete(`/matches/${matchActionId}`, { data: payload });
+}
+
+export async function fetchGlobalMatchHistory() {
+    const { data } = await api.get<{ history: any[] }>('/matches/history');
+    return data.history;
+}

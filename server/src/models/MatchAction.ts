@@ -11,6 +11,8 @@ export interface IMatchAction extends mongoose.Document {
     personalizedIntro?: string;
     status: MatchStatus;
     sentAt?: Date;
+    revokeNote?: string;
+    clientMessage?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -50,6 +52,8 @@ const MatchActionSchema = new Schema<IMatchAction>(
             index: true,
         },
         sentAt: { type: Date },
+        revokeNote: { type: String, trim: true, maxlength: 2000 },
+        clientMessage: { type: String, trim: true, maxlength: 2000 },
     },
     { timestamps: true }
 );

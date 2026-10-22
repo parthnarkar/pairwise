@@ -176,9 +176,19 @@ export interface IMatchHistoryEntry {
     } | null;
 }
 
+export interface IRecentMatch {
+    id: string;
+    customerName: string;
+    candidateName: string;
+    score: number;
+    sentAt: string;
+}
+
 export interface IMatchesStats {
     customersAssigned: number;
     activeSearches: number;
     matchesSent: number;
     accepted: number;
+    candidatesCount: number;
+    recentMatches: IRecentMatch[];
 }
