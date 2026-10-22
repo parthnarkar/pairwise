@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { LogOut, Search, Users } from 'lucide-react';
-import { listCustomers, type ListParams } from '../api/customers';
+import { listCustomers, listMyCities, type ListParams } from '../api/customers';
 import { useAuth } from '../hooks/useAuth';
 import { StatusBadge } from '../components/ui/Badge';
 import { Select } from '../components/ui/Select';
@@ -36,11 +36,11 @@ export function DashboardPage() {
         queryFn: () => listCustomers(filters),
     });
 
-    const cities = useMemo(() => {
-        const set = new Set<string>();
-        data?.forEach((c) => set.add(c.city));
-        return Array.from(set).sort();
-    }, [data]);
+    const { data: cities = [] } = useQuery({
+        queryKey: ['meta-cities'],
+        queryFn: listMyCities,
+        staleTime: 5 * 60_000, // 5 min — cities rarely change
+    });
 
     return (
         <div className="min-h-screen bg-slate-50">

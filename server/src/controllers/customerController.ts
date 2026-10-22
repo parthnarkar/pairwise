@@ -224,3 +224,13 @@ export async function addNote(req: Request, res: Response) {
         },
     });
 }
+
+// ---------- GET /api/customers/meta/cities ------------------------------
+
+export async function listMyCities(req: Request, res: Response) {
+    const matchmakerId = req.matchmakerId!;
+    const cities = await Customer.distinct('city', {
+        assignedMatchmaker: matchmakerId,
+    });
+    return res.json({ cities: (cities as string[]).sort() });
+}

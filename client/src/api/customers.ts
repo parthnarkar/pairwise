@@ -48,3 +48,10 @@ export async function addNote(id: string, text: string): Promise<INote> {
     );
     return data.note;
 }
+
+export async function listMyCities(): Promise<string[]> {
+    const { data } = await api.get<{ cities: string[] }>(
+        '/customers/meta/cities'
+    );
+    return data.cities;
+}
