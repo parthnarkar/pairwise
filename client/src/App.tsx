@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { CustomerDetailPage } from './pages/CustomerDetailPage';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -27,6 +28,14 @@ export default function App() {
                             element={
                                 <ProtectedRoute>
                                     <DashboardPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/customers/:id"
+                            element={
+                                <ProtectedRoute>
+                                    <CustomerDetailPage />
                                 </ProtectedRoute>
                             }
                         />
