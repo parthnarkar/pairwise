@@ -244,7 +244,7 @@ export function CustomerDetailPage() {
                 onSendSuccess={() => {
                     // Reflect the backend's automatic Active Search -> Matching transition immediately.
                     qc.setQueryData(['customer', id], (current: typeof customer | undefined) =>
-                        current?.journeyStatus === 'Active Search'
+                        (current?.journeyStatus === 'Active Search' || current?.journeyStatus === 'Onboarding')
                             ? { ...current, journeyStatus: 'Matching' }
                             : current
                     );
