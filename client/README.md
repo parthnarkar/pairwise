@@ -1,32 +1,58 @@
-# React + TypeScript + Vite
+# Pairwise Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+This is the frontend application for Pairwise, built with React, TypeScript, Vite, and Tailwind CSS. It communicates with the Pairwise API to manage clients, run matching algorithms, and dispatch matches.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Framework:** React 19 + Vite
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS (v4)
+- **State & Data:** TanStack Query (server state) + React Context (auth state)
+- **Routing:** React Router v7
+- **Validation:** Zod
+- **Icons:** Lucide React
 
-## React Compiler
+## Project Structure
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```
+src/
+├── api/          # Axios clients and API wrappers
+├── components/   # Reusable UI primitives and feature components
+├── context/      # AuthContext provider
+├── hooks/        # Custom React hooks (e.g., useAuth)
+├── lib/          # Formatting and helper utilities
+├── pages/        # Route-level view components
+└── types/        # Shared TypeScript interfaces
+```
 
-## Expanding the Oxlint configuration
+## Environment Variables
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+Create a `.env` file in the `client/` directory:
+
+```env
+VITE_API_URL=http://localhost:5000/api
+```
+
+## Available Scripts
+
+- `npm run dev` — Starts the Vite development server (default: `http://localhost:5173`)
+- `npm run build` — Builds the production bundle to `dist/`
+- `npm run preview` — Serves the production build locally
+- `npm run lint` — Runs Oxlint for code quality checks
+
+## Deployment
+
+This application is pre-configured for Vercel. The included `vercel.json` ensures client-side routing works correctly:
 
 ```json
 {
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+When deploying, set the `VITE_API_URL` environment variable in the Vercel dashboard to point to your deployed backend API.
