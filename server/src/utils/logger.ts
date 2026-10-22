@@ -1,16 +1,21 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const logDirectory = path.resolve(__dirname, '..', '..', 'logs');
-fs.mkdirSync(logDirectory, { recursive: true });
+const isVercel = process.env.VERCEL === '1' || Boolean(process.env.VERCEL);
+const fileStream = (() => {
+    if (isVercel) return null;
 
-const logFile = path.join(logDirectory, 'server.log');
-const fileStream = fs.createWriteStream(logFile, { flags: 'a' });
+    const logDirectory = path.resolve(__dirname, '..', '..', 'logs');
+    fs.mkdirSync(logDirectory, { recursive: true });
+    return fs.createWriteStream(path.join(logDirectory, 'server.log'), {
+        flags: 'a',
+    });
+})();
 
 export const accessLogStream = {
     write(message: string) {
         process.stdout.write(message);
-        fileStream.write(message);
+        fileStream?.write(message);
     },
 };
 
@@ -23,7 +28,7 @@ function write(level: string, message: string, error?: unknown) {
     const line = `${new Date().toISOString()} [${level}] ${message}${suffix}\n`;
 
     process.stdout.write(line);
-    fileStream.write(line);
+    fileStream?.write(line);
 }
 
 export const logger = {
