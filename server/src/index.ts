@@ -16,13 +16,14 @@ const app = express();
 
 const allowedOrigins = [
     'http://localhost:5173',
+    'https://pairwise-client.vercel.app',
     process.env.CLIENT_URL, // e.g., https://pairwise-client.vercel.app
 ].filter(Boolean) as string[];
 
 app.use(
     cors({
         origin: (origin, callback) => {
-            if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+            if (!origin || allowedOrigins.includes(origin)) {
                 callback(null, true);
             } else {
                 callback(new Error('Not allowed by CORS'));
@@ -116,6 +117,11 @@ app.use(errorHandler);
 
 // Vercel serverless handler (also usable as a plain function)
 const handler = async (req: any, res: any) => {
+    // CORS preflight must not wait for MongoDB. Vercel otherwise returns a
+    // database error before Express can attach Access-Control-Allow-Origin.
+    if (req.method === 'OPTIONS') {
+        return app(req, res);
+    }
     await connectDB();
     return app(req, res);
 };
