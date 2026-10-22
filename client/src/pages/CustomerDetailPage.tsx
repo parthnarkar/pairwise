@@ -1,21 +1,22 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { ArrowLeft, Mail, Phone, MapPin, Briefcase, GraduationCap } from 'lucide-react';
 import {
-    getCustomer,
-    updateStatus,
-    addNote,
-} from '../api/customers';
+    ArrowLeft,
+    Mail,
+    Phone,
+    MapPin,
+    Sparkles,
+} from 'lucide-react';
+import { getCustomer, updateStatus, addNote } from '../api/customers';
 import { StatusBadge } from '../components/ui/Badge';
 import { Card, CardBody, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
+import { SentMatchesPanel } from '../components/SentMatchesPanel';
+import { SuggestedMatchesDrawer } from '../components/SuggestedMatchesDrawer';
 import { formatDateTime, formatINR, initials } from '../lib/format';
-import {
-    JOURNEY_STATUSES,
-    type JourneyStatus,
-} from '../types';
+import { JOURNEY_STATUSES, type JourneyStatus } from '../types';
 
 export function CustomerDetailPage() {
     const { id = '' } = useParams();
@@ -30,6 +31,7 @@ export function CustomerDetailPage() {
 
     const [noteText, setNoteText] = useState('');
     const [statusSaving, setStatusSaving] = useState(false);
+    const [matchesOpen, setMatchesOpen] = useState(false);
 
     const noteMutation = useMutation({
         mutationFn: (text: string) => addNote(id, text),
@@ -47,7 +49,9 @@ export function CustomerDetailPage() {
         },
     });
 
-    const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const handleStatusChange = async (
+        e: React.ChangeEvent<HTMLSelectElement>
+    ) => {
         setStatusSaving(true);
         try {
             await statusMutation.mutateAsync(e.target.value as JourneyStatus);
@@ -101,7 +105,8 @@ export function CustomerDetailPage() {
                                     {customer.firstName} {customer.lastName}
                                 </h1>
                                 <p className="text-sm text-slate-600 mt-1">
-                                    {customer.age} yrs · {customer.gender} · {customer.maritalStatus}
+                                    {customer.age} yrs · {customer.gender} ·{' '}
+                                    {customer.maritalStatus}
                                 </p>
                                 <div className="flex flex-wrap gap-4 mt-3 text-sm text-slate-600">
                                     <span className="inline-flex items-center gap-1.5">
@@ -126,8 +131,25 @@ export function CustomerDetailPage() {
                     </Card>
                 </div>
 
-                {/* RIGHT: Journey + Notes */}
+                {/* RIGHT: Matches + Journey + Notes */}
                 <div className="space-y-6">
+                    <Card>
+                        <CardHeader title="Matches" />
+                        <CardBody>
+                            <p className="text-sm text-slate-600 mb-3">
+                                Run the algorithm to find compatible candidates based on this
+                                customer's biodata and preferences.
+                            </p>
+                            <Button
+                                onClick={() => setMatchesOpen(true)}
+                                className="w-full"
+                            >
+                                <Sparkles size={16} className="mr-2" />
+                                Find Matches
+                            </Button>
+                        </CardBody>
+                    </Card>
+
                     <Card>
                         <CardHeader title="Journey Status" />
                         <CardBody>
@@ -145,6 +167,13 @@ export function CustomerDetailPage() {
                             <p className="text-xs text-slate-500 mt-2">
                                 Changing status updates the customer's journey immediately.
                             </p>
+                        </CardBody>
+                    </Card>
+
+                    <Card>
+                        <CardHeader title="Sent Matches" />
+                        <CardBody>
+                            <SentMatchesPanel customerId={customer.id} />
                         </CardBody>
                     </Card>
 
@@ -199,6 +228,18 @@ export function CustomerDetailPage() {
                     </Card>
                 </div>
             </main>
+
+            <SuggestedMatchesDrawer
+                customerId={customer.id}
+                customerName={`${customer.firstName} ${customer.lastName}`}
+                open={matchesOpen}
+                onClose={() => setMatchesOpen(false)}
+                onSendSuccess={() => {
+                    qc.invalidateQueries({ queryKey: ['match-history', id] });
+                    qc.invalidateQueries({ queryKey: ['match-stats'] });
+                    qc.invalidateQueries({ queryKey: ['customers'] });
+                }}
+            />
         </div>
     );
 }
@@ -206,7 +247,10 @@ export function CustomerDetailPage() {
 function BiodataGrid({ customer }: { customer: any }) {
     const rows: { label: string; value: string | number | undefined }[] = [
         { label: 'Full Name', value: `${customer.firstName} ${customer.lastName}` },
-        { label: 'Date of Birth', value: new Date(customer.dateOfBirth).toLocaleDateString('en-IN') },
+        {
+            label: 'Date of Birth',
+            value: new Date(customer.dateOfBirth).toLocaleDateString('en-IN'),
+        },
         { label: 'Age', value: `${customer.age} yrs` },
         { label: 'Gender', value: customer.gender },
         { label: 'Height', value: `${customer.height} cm` },
@@ -235,7 +279,10 @@ function BiodataGrid({ customer }: { customer: any }) {
         { label: 'Drinking', value: customer.lifestyle?.drinking || '—' },
         { label: 'Smoking', value: customer.lifestyle?.smoking || '—' },
         { label: 'Want Kids', value: customer.preferences?.wantKids || '—' },
-        { label: 'Open to Relocate', value: customer.preferences?.openToRelocate || '—' },
+        {
+            label: 'Open to Relocate',
+            value: customer.preferences?.openToRelocate || '—',
+        },
         { label: 'Open to Pets', value: customer.preferences?.openToPets || '—' },
         {
             label: 'Preferred Age Range',

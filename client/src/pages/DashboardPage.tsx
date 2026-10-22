@@ -1,16 +1,23 @@
 import { useMemo } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { LogOut, Search, Users } from 'lucide-react';
-import { listCustomers, listMyCities, type ListParams } from '../api/customers';
+import { LogOut, Search, Users, Activity, Send } from 'lucide-react';
+import {
+    listCustomers,
+    listMyCities,
+    type ListParams,
+} from '../api/customers';
+import { fetchMatchStats } from '../api/matches';
 import { useAuth } from '../hooks/useAuth';
 import { StatusBadge } from '../components/ui/Badge';
 import { Select } from '../components/ui/Select';
+import { MetricTile } from '../components/MetricTile';
 import { initials } from '../lib/format';
 import { JOURNEY_STATUSES, type JourneyStatus } from '../types';
 
 export function DashboardPage() {
     const { matchmaker, logout } = useAuth();
+    const navigate = useNavigate();
     const [params, setParams] = useSearchParams();
 
     const filters: ListParams = useMemo(
@@ -31,15 +38,24 @@ export function DashboardPage() {
         setParams(next, { replace: true });
     };
 
+    // Customer list (filtered)
     const { data, isLoading, error } = useQuery({
         queryKey: ['customers', filters],
         queryFn: () => listCustomers(filters),
     });
 
+    // Full city list (unfiltered) — Fix from Phase 3
     const { data: cities = [] } = useQuery({
         queryKey: ['meta-cities'],
         queryFn: listMyCities,
-        staleTime: 5 * 60_000, // 5 min — cities rarely change
+        staleTime: 5 * 60_000,
+    });
+
+    // Dashboard metrics
+    const { data: stats } = useQuery({
+        queryKey: ['match-stats'],
+        queryFn: fetchMatchStats,
+        staleTime: 30_000,
     });
 
     return (
@@ -64,6 +80,26 @@ export function DashboardPage() {
             </header>
 
             <main className="max-w-7xl mx-auto px-6 py-6 space-y-4">
+                {/* Metrics row */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <MetricTile
+                        label="Customers Assigned"
+                        value={stats?.customersAssigned ?? '—'}
+                        icon={<Users size={20} />}
+                    />
+                    <MetricTile
+                        label="Active Searches"
+                        value={stats?.activeSearches ?? '—'}
+                        icon={<Activity size={20} />}
+                    />
+                    <MetricTile
+                        label="Matches Sent"
+                        value={stats?.matchesSent ?? '—'}
+                        hint={stats?.accepted ? `${stats.accepted} accepted` : undefined}
+                        icon={<Send size={20} />}
+                    />
+                </div>
+
                 {/* Filters bar */}
                 <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap items-end gap-3">
                     <div className="flex-1 min-w-[220px]">
@@ -136,10 +172,30 @@ export function DashboardPage() {
                     </Select>
                 </div>
 
-                {/* Results */}
+                {/* Loading skeleton */}
                 {isLoading && (
-                    <div className="bg-white rounded-xl border border-slate-200 p-12 text-center text-sm text-slate-500">
-                        Loading customers…
+                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                        <div className="bg-slate-50 px-4 py-3 grid grid-cols-5 gap-4">
+                            {[1, 2, 3, 4, 5].map((i) => (
+                                <div
+                                    key={i}
+                                    className="h-3 bg-slate-200 rounded animate-pulse"
+                                />
+                            ))}
+                        </div>
+                        {[1, 2, 3, 4, 5].map((r) => (
+                            <div
+                                key={r}
+                                className="px-4 py-3 grid grid-cols-5 gap-4 border-t border-slate-100"
+                            >
+                                {[1, 2, 3, 4, 5].map((c) => (
+                                    <div
+                                        key={c}
+                                        className="h-3 bg-slate-100 rounded animate-pulse"
+                                    />
+                                ))}
+                            </div>
+                        ))}
                     </div>
                 )}
 
@@ -163,11 +219,21 @@ export function DashboardPage() {
                         <table className="w-full text-sm">
                             <thead className="bg-slate-50 border-b border-slate-200">
                                 <tr>
-                                    <th className="text-left px-4 py-3 font-medium text-slate-600">Name</th>
-                                    <th className="text-left px-4 py-3 font-medium text-slate-600">Age</th>
-                                    <th className="text-left px-4 py-3 font-medium text-slate-600">City</th>
-                                    <th className="text-left px-4 py-3 font-medium text-slate-600">Marital</th>
-                                    <th className="text-left px-4 py-3 font-medium text-slate-600">Status</th>
+                                    <th className="text-left px-4 py-3 font-medium text-slate-600">
+                                        Name
+                                    </th>
+                                    <th className="text-left px-4 py-3 font-medium text-slate-600">
+                                        Age
+                                    </th>
+                                    <th className="text-left px-4 py-3 font-medium text-slate-600">
+                                        City
+                                    </th>
+                                    <th className="text-left px-4 py-3 font-medium text-slate-600">
+                                        Marital
+                                    </th>
+                                    <th className="text-left px-4 py-3 font-medium text-slate-600">
+                                        Status
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -175,9 +241,7 @@ export function DashboardPage() {
                                     <tr
                                         key={c.id}
                                         className="hover:bg-slate-50 cursor-pointer"
-                                        onClick={() => {
-                                            window.location.href = `/customers/${c.id}`;
-                                        }}
+                                        onClick={() => navigate(`/customers/${c.id}`)}
                                     >
                                         <td className="px-4 py-3">
                                             <Link
@@ -192,15 +256,15 @@ export function DashboardPage() {
                                                     <p className="font-medium text-slate-900">
                                                         {c.firstName} {c.lastName}
                                                     </p>
-                                                    <p className="text-xs text-slate-500">
-                                                        {c.gender}
-                                                    </p>
+                                                    <p className="text-xs text-slate-500">{c.gender}</p>
                                                 </div>
                                             </Link>
                                         </td>
                                         <td className="px-4 py-3 text-slate-700">{c.age}</td>
                                         <td className="px-4 py-3 text-slate-700">{c.city}</td>
-                                        <td className="px-4 py-3 text-slate-700">{c.maritalStatus}</td>
+                                        <td className="px-4 py-3 text-slate-700">
+                                            {c.maritalStatus}
+                                        </td>
                                         <td className="px-4 py-3">
                                             <StatusBadge status={c.journeyStatus} />
                                         </td>

@@ -87,3 +87,98 @@ export interface ICustomerDetail {
     createdAt: string;
     updatedAt: string;
 }
+
+// Match types
+export type MatchLabel =
+    | 'High Potential Match'
+    | 'Good Compatibility'
+    | 'Worth Exploring';
+
+export interface IMatchCandidate {
+    id: string;
+    firstName: string;
+    lastName: string;
+    age: number;
+    gender: string;
+    city: string;
+    height: number;
+    maritalStatus: string;
+    education: { undergraduateCollege: string; degree: string };
+    profession: { currentCompany: string; designation: string; income: number };
+    lifestyle: {
+        drinking: 'Never' | 'Socially' | 'Regularly';
+        smoking: 'Never' | 'Socially' | 'Regularly';
+        diet: 'Vegetarian' | 'Non-Vegetarian' | 'Eggetarian';
+    };
+    preferences: {
+        wantKids: TriState;
+        openToRelocate: TriState;
+        openToPets: TriState;
+    };
+    background: { religion?: string };
+}
+
+export interface IMatchBreakdown {
+    age: number;
+    height: number;
+    income: number;
+    location: number;
+    kids: number;
+    lifestyle: number;
+    education: number;
+}
+
+export interface IMatchResult {
+    candidateId: string;
+    candidate: IMatchCandidate;
+    compatibilityScore: number;
+    label: MatchLabel;
+    breakdown: IMatchBreakdown;
+    matchRationale: string;
+    personalizedIntro?: string;
+    rationaleSource: 'ai' | 'fallback';
+}
+
+export interface ICalculateMatchesResponse {
+    customerId: string;
+    customerName: string;
+    totalCandidates: number;
+    afterHardFilters: number;
+    returned: number;
+    matches: IMatchResult[];
+}
+
+// Match history + stats (Phase 5)
+export type MatchActionStatus = 'Suggested' | 'Sent' | 'Accepted' | 'Rejected';
+
+export interface IMatchHistoryEntry {
+    id: string;
+    compatibilityScore: number;
+    status: MatchActionStatus;
+    matchRationale: string;
+    personalizedIntro?: string;
+    sentAt: string;
+    candidate: {
+        id: string;
+        firstName: string;
+        lastName: string;
+        age: number;
+        city: string;
+        height: number;
+        maritalStatus: string;
+        education: { undergraduateCollege: string; degree: string };
+        profession: {
+            currentCompany: string;
+            designation: string;
+            income: number;
+        };
+        background: { religion?: string };
+    } | null;
+}
+
+export interface IMatchesStats {
+    customersAssigned: number;
+    activeSearches: number;
+    matchesSent: number;
+    accepted: number;
+}
