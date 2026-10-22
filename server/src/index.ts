@@ -9,6 +9,7 @@ import chalk from 'chalk';
 import authRoutes from './routes/authRoutes';
 import matchmakerRoutes from './routes/matchmakerRoutes';
 import customerRoutes from './routes/customerRoutes';
+import matchRoutes from './routes/matchRoutes';
 
 const app = express();
 
@@ -93,6 +94,7 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/matchmakers', matchmakerRoutes);
 app.use('/api/customers', customerRoutes);
+app.use('/api/matches', matchRoutes);
 
 // Error handler MUST be last
 app.use(errorHandler);

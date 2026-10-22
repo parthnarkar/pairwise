@@ -1,4 +1,8 @@
 // Realistic Indian demographic pools for synthetic seed data.
+import {
+    TIER_1_COLLEGES as tier1Colleges,
+    TIER_2_COLLEGES as tier2Colleges,
+} from '../services/matchingConfig';
 
 export const maleFirstNames = [
     'Arjun', 'Rohan', 'Vikram', 'Karan', 'Aditya', 'Rahul', 'Siddharth',
@@ -31,18 +35,6 @@ export const languages = [
     'Malayalam', 'Bengali', 'Gujarati', 'Punjabi',
 ];
 
-// "Tier-1" colleges used for premium weighting on female-customer matches
-export const tier1Colleges = [
-    'IIT Bombay', 'IIT Delhi', 'IIT Madras', 'BITS Pilani',
-    'IIM Ahmedabad', 'IIM Bangalore', 'NIT Trichy', 'AIIMS Delhi',
-];
-
-export const tier2Colleges = [
-    'Delhi University', 'St. Xavier\u2019s Mumbai', 'Symbiosis Pune',
-    'Christ University Bengaluru', 'Pune University', 'KEM Mumbai',
-    'NLU Delhi', 'NID Ahmedabad', 'Fergusson College Pune',
-];
-
 export const degrees = [
     'B.Tech', 'B.E.', 'B.Com', 'BBA', 'B.Sc', 'MBBS', 'CA',
     'MBA', 'M.Tech', 'LLB', 'BA (Economics)', 'B.Des', 'MD',
@@ -68,3 +60,5 @@ export const femaleProfessions = [
     'Corporate Lawyer', 'Data Analyst', 'HR Manager', 'Architect',
     'Journalist', 'Teacher', 'Professor', 'Consultant', 'Entrepreneur',
 ];
+
+export { tier1Colleges, tier2Colleges };
