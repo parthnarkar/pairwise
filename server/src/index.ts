@@ -4,6 +4,10 @@ import helmet from 'helmet';
 import { connectDB } from './config/db';
 import { errorHandler } from './middleware/errorHandler';
 
+import authRoutes from './routes/authRoutes';
+import matchmakerRoutes from './routes/matchmakerRoutes';
+import customerRoutes from './routes/customerRoutes';
+
 const app = express();
 
 app.use(helmet());
@@ -20,10 +24,9 @@ app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Routes will be mounted here in Phase 2+:
-// app.use('/api/auth', authRoutes);
-// app.use('/api/customers', customerRoutes);
-// app.use('/api/matches', matchRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/matchmakers', matchmakerRoutes);
+app.use('/api/customers', customerRoutes);
 
 // Error handler MUST be last
 app.use(errorHandler);
