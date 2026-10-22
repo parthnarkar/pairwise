@@ -227,3 +227,92 @@ export async function sendMatch(req: Request, res: Response) {
         throw err;
     }
 }
+
+// ---------- GET /api/matches/history/:customerId -----------------------
+
+export async function getMatchHistory(req: Request, res: Response) {
+    const { customerId } = req.params;
+    const matchmakerId = req.matchmakerId!;
+
+    if (!mongoose.isValidObjectId(customerId)) {
+        return res.status(404).json({ error: 'Customer not found' });
+    }
+
+    // Verify ownership before returning history
+    const owns = await Customer.exists({
+        _id: customerId,
+        assignedMatchmaker: matchmakerId,
+    });
+    if (!owns) {
+        return res.status(404).json({ error: 'Customer not found' });
+    }
+
+    const actions = await MatchAction.find({ customerId })
+        .sort({ createdAt: -1 })
+        .populate({
+            path: 'candidateId',
+            select:
+                'firstName lastName gender dateOfBirth city height maritalStatus ' +
+                'education profession lifestyle preferences background',
+        })
+        .lean();
+
+    const history = actions.map((a: any) => {
+        const c = a.candidateId as any;
+        return {
+            id: String(a._id),
+            compatibilityScore: a.compatibilityScore,
+            status: a.status,
+            matchRationale: a.matchRationale,
+            personalizedIntro: a.personalizedIntro,
+            sentAt: a.sentAt ?? a.createdAt,
+            candidate: c
+                ? {
+                    id: String(c._id),
+                    firstName: c.firstName,
+                    lastName: c.lastName,
+                    age: getAge(c.dateOfBirth),
+                    city: c.city,
+                    height: c.height,
+                    maritalStatus: c.maritalStatus,
+                    education: {
+                        undergraduateCollege: c.education?.undergraduateCollege,
+                        degree: c.education?.degree,
+                    },
+                    profession: {
+                        currentCompany: c.profession?.currentCompany,
+                        designation: c.profession?.designation,
+                        income: c.profession?.income,
+                    },
+                    background: { religion: c.background?.religion },
+                }
+                : null,
+        };
+    });
+
+    return res.json({ customerId, history });
+}
+
+// ---------- GET /api/matches/stats -------------------------------------
+
+export async function getMatchStats(req: Request, res: Response) {
+    const matchmakerId = req.matchmakerId!;
+
+    const [customersAssigned, activeSearches, matchesSent, accepted] =
+        await Promise.all([
+            Customer.countDocuments({ assignedMatchmaker: matchmakerId }),
+            Customer.countDocuments({
+                assignedMatchmaker: matchmakerId,
+                journeyStatus: 'Active Search',
+            }),
+            MatchAction.countDocuments({ matchmakerId, status: 'Sent' }),
+            MatchAction.countDocuments({ matchmakerId, status: 'Accepted' }),
+        ]);
+
+    return res.json({
+        customersAssigned,
+        activeSearches,
+        matchesSent,
+        accepted,
+    });
+}
