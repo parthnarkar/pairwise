@@ -8,6 +8,7 @@ import { CustomerDetailPage } from './pages/CustomerDetailPage';
 import { MatchesHistoryPage } from './pages/MatchesHistoryPage';
 import { CandidatesPage } from './pages/CandidatesPage';
 import { ToastProvider } from './components/ToastProvider';
+import { Navbar } from './components/Navbar';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -27,36 +28,23 @@ export default function App() {
                     <BrowserRouter>
                         <Routes>
                         <Route path="/login" element={<LoginPage />} />
-                        <Route
-                            path="/"
-                            element={
-                                <ProtectedRoute>
-                                    <DashboardPage />
-                                </ProtectedRoute>
-                            }
-                        />
+                        <Route path="/" element={<ProtectedRoute><><Navbar /><DashboardPage /></></ProtectedRoute>} />
                         <Route
                             path="/customers/:id"
                             element={
-                                <ProtectedRoute>
-                                    <CustomerDetailPage />
-                                </ProtectedRoute>
+                                <ProtectedRoute><><Navbar /><CustomerDetailPage /></></ProtectedRoute>
                             }
                         />
                         <Route
                             path="/matches"
                             element={
-                                <ProtectedRoute>
-                                    <MatchesHistoryPage />
-                                </ProtectedRoute>
+                                <ProtectedRoute><><Navbar /><MatchesHistoryPage /></></ProtectedRoute>
                             }
                         />
                         <Route
                             path="/candidates"
                             element={
-                                <ProtectedRoute>
-                                    <CandidatesPage />
-                                </ProtectedRoute>
+                                <ProtectedRoute><><Navbar /><CandidatesPage /></></ProtectedRoute>
                             }
                         />
                         <Route path="*" element={<Navigate to="/" replace />} />

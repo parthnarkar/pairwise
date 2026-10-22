@@ -380,6 +380,10 @@ export async function revokeMatch(req: Request, res: Response) {
         customerId: deleted.customerId,
         candidateId: deleted.candidateId,
         matchmakerId,
+        compatibilityScore: deleted.compatibilityScore,
+        matchRationale: deleted.matchRationale,
+        personalizedIntro: deleted.personalizedIntro,
+        sentAt: deleted.sentAt,
         revokeNote: parsed.data.revokeNote,
         clientMessage: parsed.data.clientMessage,
     });
@@ -425,28 +429,61 @@ export async function revokeMatch(req: Request, res: Response) {
 export async function getGlobalMatchHistory(req: Request, res: Response) {
     const matchmakerId = req.matchmakerId!;
 
-    const actions = await MatchAction.find({ matchmakerId })
-        .sort({ createdAt: -1 })
-        .populate('customerId', 'firstName lastName city')
-        .populate('candidateId', 'firstName lastName city')
-        .lean();
+    const [actions, revocations] = await Promise.all([
+        MatchAction.find({ matchmakerId })
+            .populate('customerId', 'firstName lastName city gender dateOfBirth height maritalStatus education profession background')
+            .populate('candidateId', 'firstName lastName city gender dateOfBirth height maritalStatus education profession background')
+            .lean(),
+        MatchRevocation.find({ matchmakerId })
+            .populate('customerId', 'firstName lastName city gender dateOfBirth height maritalStatus education profession background')
+            .populate('candidateId', 'firstName lastName city gender dateOfBirth height maritalStatus education profession background')
+            .lean(),
+    ]);
 
-    const history = actions.map((a: any) => ({
-        id: String(a._id),
-        compatibilityScore: a.compatibilityScore,
-        status: a.status,
-        sentAt: a.sentAt ?? a.createdAt,
-        customer: {
-            id: a.customerId?._id,
-            name: `${a.customerId?.firstName} ${a.customerId?.lastName}`,
-            city: a.customerId?.city,
-        },
-        candidate: {
-            id: a.candidateId?._id,
-            name: `${a.candidateId?.firstName} ${a.candidateId?.lastName}`,
-            city: a.candidateId?.city,
-        },
-    }));
+    const shapePerson = (person: any) =>
+        person && typeof person === 'object' && person.firstName
+            ? {
+        id: String(person._id),
+        name: `${person.firstName} ${person.lastName}`,
+        city: person.city ?? 'Unknown city',
+        gender: person.gender ?? 'Unknown',
+        age: person.dateOfBirth ? getAge(person.dateOfBirth) : null,
+        height: person.height ?? 0,
+        maritalStatus: person.maritalStatus ?? 'Unknown',
+        education: person.education ?? {},
+        profession: person.profession ?? {},
+        background: person.background ?? {},
+            }
+            : null;
+
+    const history = [
+        ...actions.map((a: any) => ({
+            id: String(a._id),
+            compatibilityScore: a.compatibilityScore,
+            status: a.status,
+            matchRationale: a.matchRationale,
+            personalizedIntro: a.personalizedIntro,
+            sentAt: a.sentAt ?? a.createdAt,
+            revokedAt: null,
+            revokeNote: null,
+            clientMessage: null,
+            customer: shapePerson(a.customerId),
+            candidate: shapePerson(a.candidateId),
+        })),
+        ...revocations.map((r: any) => ({
+            id: String(r._id),
+            compatibilityScore: r.compatibilityScore,
+            status: 'Revoked',
+            matchRationale: r.matchRationale,
+            personalizedIntro: r.personalizedIntro,
+            sentAt: r.sentAt ?? r.createdAt,
+            revokedAt: r.createdAt,
+            revokeNote: r.revokeNote,
+            clientMessage: r.clientMessage,
+            customer: shapePerson(r.customerId),
+            candidate: shapePerson(r.candidateId),
+        })),
+    ].sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
 
     return res.json({ history });
 }

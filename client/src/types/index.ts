@@ -10,7 +10,7 @@ export interface ICustomerListItem {
     firstName: string;
     lastName: string;
     gender: 'Male' | 'Female' | 'Other';
-    age: number;
+    age: number | null;
     city: string;
     maritalStatus: 'Never Married' | 'Divorced' | 'Widowed';
     journeyStatus: JourneyStatus
@@ -149,7 +149,34 @@ export interface ICalculateMatchesResponse {
 }
 
 // Match history + stats (Phase 5)
-export type MatchActionStatus = 'Suggested' | 'Sent' | 'Accepted' | 'Rejected';
+export type MatchActionStatus = 'Suggested' | 'Sent' | 'Accepted' | 'Rejected' | 'Revoked';
+
+export interface IMatchHistoryPerson {
+    id: string;
+    name: string;
+    city: string;
+    gender: string;
+    age: number;
+    height: number;
+    maritalStatus: string;
+    education: { undergraduateCollege: string; degree: string };
+    profession: { currentCompany: string; designation: string; income: number };
+    background: { religion?: string; caste?: string };
+}
+
+export interface IGlobalMatchHistoryEntry {
+    id: string;
+    compatibilityScore: number;
+    status: MatchActionStatus;
+    matchRationale: string;
+    personalizedIntro?: string;
+    sentAt: string;
+    revokedAt?: string | null;
+    revokeNote?: string | null;
+    clientMessage?: string | null;
+    customer: IMatchHistoryPerson | null;
+    candidate: IMatchHistoryPerson | null;
+}
 
 export interface IMatchHistoryEntry {
     id: string;

@@ -3,6 +3,7 @@ import type {
     ICalculateMatchesResponse,
     IMatchHistoryEntry,
     IMatchesStats,
+    IGlobalMatchHistoryEntry,
 } from '../types';
 
 // ---------- POST /api/matches/calculate/:customerId ---------------------
@@ -69,7 +70,7 @@ export async function revokeMatch(
     await api.delete(`/matches/${matchActionId}`, { data: payload });
 }
 
-export async function fetchGlobalMatchHistory() {
-    const { data } = await api.get<{ history: any[] }>('/matches/history');
+export async function fetchGlobalMatchHistory(): Promise<IGlobalMatchHistoryEntry[]> {
+    const { data } = await api.get<{ history: IGlobalMatchHistoryEntry[] }>('/matches/history');
     return data.history;
 }
