@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { LogOut, Search, Users, Activity, Send, ChevronRight, UserRoundSearch } from 'lucide-react';
+import { Search, Users, Activity, Send, ChevronRight, UserRoundSearch } from 'lucide-react';
 import {
     listCustomers,
     listMyCities,
@@ -16,7 +16,7 @@ import { initials } from '../lib/format';
 import { JOURNEY_STATUSES, type JourneyStatus } from '../types';
 
 export function DashboardPage() {
-    const { matchmaker, logout } = useAuth();
+    const { matchmaker } = useAuth();
     const navigate = useNavigate();
     const [params, setParams] = useSearchParams();
 
@@ -59,29 +59,19 @@ export function DashboardPage() {
     });
 
     return (
-        <div className="min-h-screen bg-slate-50">
-            <header className="bg-white border-b border-slate-200">
-                <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-lg font-semibold text-slate-900">
-                            Dashboard
-                        </h1>
-                        <p className="text-xs text-slate-500">
-                            {matchmaker?.name} · {matchmaker?.assignedRegion}
-                        </p>
+        <div className="min-h-screen bg-slate-50" style={{ fontFamily: 'Plus Jakarta Sans, Inter, system-ui, sans-serif' }}>
+            <main className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-8">
+                <section className="relative overflow-hidden rounded-3xl border border-indigo-100 bg-gradient-to-br from-white via-indigo-50 to-rose-50 px-6 py-8 text-slate-900 shadow-xl shadow-slate-200/60 sm:px-10">
+                    <div className="pointer-events-none absolute -right-24 -top-32 h-72 w-72 rounded-full bg-indigo-200/40 blur-3xl" />
+                    <div className="pointer-events-none absolute -bottom-32 left-1/3 h-64 w-64 rounded-full bg-rose-200/40 blur-3xl" />
+                    <div className="relative">
+                        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-indigo-600">Matchmaker workspace</p>
+                        <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Good morning, {matchmaker?.name?.split(' ')[0] || 'Matchmaker'}.</h1>
+                        <p className="mt-2 max-w-xl text-sm text-slate-600">Keep every client moving toward a meaningful connection.</p>
                     </div>
-                    <button
-                        onClick={logout}
-                        className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition"
-                    >
-                        <LogOut size={16} /> Sign out
-                    </button>
-                </div>
-            </header>
-
-            <main className="max-w-7xl mx-auto px-6 py-6 space-y-4">
+                </section>
                 {/* Metrics row */}
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <MetricTile
                         label="Customers Assigned"
                         value={stats?.customersAssigned ?? '—'}
@@ -109,16 +99,16 @@ export function DashboardPage() {
 
                 {/* Recent Matches Row */}
                 {stats?.recentMatches && stats.recentMatches.length > 0 && (
-                    <div className="bg-white rounded-xl border border-slate-200 p-4">
-                        <div className="flex items-center justify-between mb-3">
-                            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Recently Sent Matches</p>
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <div className="mb-4 flex items-center justify-between">
+                            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Recently sent matches</p>
                             <Link to="/matches" className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 font-medium">
                                 View All History <ChevronRight size={14} />
                             </Link>
                         </div>
                         <div className="flex flex-wrap gap-3">
                             {stats.recentMatches.map((rm: any) => (
-                                <div key={rm.id} className="flex items-center gap-3 text-sm bg-slate-50 px-3 py-2 rounded-lg border border-slate-200">
+                                <div key={rm.id} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
                                     <span className="font-medium text-slate-900">{rm.customerName}</span>
                                     <span className="text-slate-400">→</span>
                                     <span className="font-medium text-slate-900">{rm.candidateName}</span>
@@ -130,7 +120,7 @@ export function DashboardPage() {
                 )}
 
                 {/* Filters bar */}
-                <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap items-end gap-3">
+                <div className="flex flex-wrap items-end gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                     <div className="flex-1 min-w-[220px]">
                         <label className="block text-xs font-medium text-slate-600 mb-1">
                             Search
@@ -144,7 +134,8 @@ export function DashboardPage() {
                                 value={filters.q}
                                 onChange={(e) => updateParam('q', e.target.value)}
                                 placeholder="Search by name…"
-                                className="w-full rounded-lg border border-slate-300 pl-9 pr-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                                aria-label="Search customers"
+                                className="w-full rounded-xl border border-slate-300 py-2.5 pl-9 pr-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
                             />
                         </div>
                     </div>
@@ -203,8 +194,8 @@ export function DashboardPage() {
 
                 {/* Loading skeleton */}
                 {isLoading && (
-                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                        <div className="bg-slate-50 px-4 py-3 grid grid-cols-5 gap-4">
+                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        <div className="grid grid-cols-5 gap-4 bg-slate-50 px-4 py-3">
                             {[1, 2, 3, 4, 5].map((i) => (
                                 <div
                                     key={i}
@@ -229,13 +220,13 @@ export function DashboardPage() {
                 )}
 
                 {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm">
+                    <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
                         Could not load customers.
                     </div>
                 )}
 
                 {data && data.length === 0 && (
-                    <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
                         <Users size={32} className="mx-auto text-slate-300 mb-3" />
                         <p className="text-sm text-slate-500">
                             No customers match your filters.
@@ -244,23 +235,23 @@ export function DashboardPage() {
                 )}
 
                 {data && data.length > 0 && (
-                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                         <table className="w-full text-sm">
                             <thead className="bg-slate-50 border-b border-slate-200">
                                 <tr>
-                                    <th className="text-left px-4 py-3 font-medium text-slate-600">
+                                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                                         Name
                                     </th>
-                                    <th className="text-left px-4 py-3 font-medium text-slate-600">
+                                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                                         Age
                                     </th>
-                                    <th className="text-left px-4 py-3 font-medium text-slate-600">
+                                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                                         City
                                     </th>
-                                    <th className="text-left px-4 py-3 font-medium text-slate-600">
+                                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                                         Marital
                                     </th>
-                                    <th className="text-left px-4 py-3 font-medium text-slate-600">
+                                    <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                                         Status
                                     </th>
                                 </tr>
@@ -269,7 +260,7 @@ export function DashboardPage() {
                                 {data.map((c) => (
                                     <tr
                                         key={c.id}
-                                        className="hover:bg-slate-50 cursor-pointer transition"
+                                        className="cursor-pointer transition hover:bg-slate-50"
                                         onClick={() => navigate(`/customers/${c.id}`)}
                                     >
                                         <td className="px-4 py-3">

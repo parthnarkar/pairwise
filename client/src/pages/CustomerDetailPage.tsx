@@ -1,6 +1,6 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     ArrowLeft,
     Mail,
@@ -33,6 +33,10 @@ export function CustomerDetailPage() {
     const [statusSaving, setStatusSaving] = useState(false);
     const [matchesOpen, setMatchesOpen] = useState(false);
 
+    useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }, [id]);
+
     const noteMutation = useMutation({
         mutationFn: (text: string) => addNote(id, text),
         onSuccess: () => {
@@ -62,14 +66,14 @@ export function CustomerDetailPage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center text-sm text-slate-500">
+            <div className="flex min-h-screen items-center justify-center bg-slate-50 text-sm text-slate-500">
                 Loading customer…
             </div>
         );
     }
     if (error || !customer) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center gap-3">
+            <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-slate-50">
                 <p className="text-sm text-slate-600">Customer not found.</p>
                 <Link to="/" className="text-sm text-slate-900 underline">
                     Back to dashboard
@@ -79,12 +83,12 @@ export function CustomerDetailPage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50">
-            <header className="bg-white border-b border-slate-200">
-                <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="min-h-screen bg-slate-50" style={{ fontFamily: 'Plus Jakarta Sans, Inter, system-ui, sans-serif' }}>
+            <header className="border-b border-slate-200 bg-white">
+                <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-6 sm:px-8">
                     <button
                         onClick={() => navigate('/')}
-                        className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900"
+                        className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-500/10"
                     >
                         <ArrowLeft size={16} /> Back to dashboard
                     </button>
@@ -92,23 +96,24 @@ export function CustomerDetailPage() {
                 </div>
             </header>
 
-            <main className="max-w-7xl mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <main className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-8 sm:px-8 lg:grid-cols-3">
                 {/* LEFT: Profile + biodata */}
                 <div className="lg:col-span-2 space-y-6">
-                    <Card>
+                    <Card className="rounded-2xl">
                         <CardBody className="flex items-start gap-4">
-                            <div className="w-16 h-16 rounded-full bg-slate-900 text-white text-xl flex items-center justify-center font-medium shrink-0">
+                            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-xl font-bold text-white">
                                 {initials(customer.firstName, customer.lastName)}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <h1 className="text-xl font-semibold text-slate-900">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-indigo-500">Client profile</p>
+                                <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
                                     {customer.firstName} {customer.lastName}
                                 </h1>
                                 <p className="text-sm text-slate-600 mt-1">
                                     {customer.age} yrs · {customer.gender} ·{' '}
                                     {customer.maritalStatus}
                                 </p>
-                                <div className="flex flex-wrap gap-4 mt-3 text-sm text-slate-600">
+                                <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-600">
                                     <span className="inline-flex items-center gap-1.5">
                                         <MapPin size={14} /> {customer.city}, {customer.country}
                                     </span>
@@ -123,7 +128,7 @@ export function CustomerDetailPage() {
                         </CardBody>
                     </Card>
 
-                    <Card>
+                    <Card className="rounded-2xl">
                         <CardHeader title="Biodata" />
                         <CardBody>
                             <BiodataGrid customer={customer} />
@@ -133,10 +138,10 @@ export function CustomerDetailPage() {
 
                 {/* RIGHT: Matches + Journey + Notes */}
                 <div className="space-y-6">
-                    <Card>
+                    <Card className="rounded-2xl">
                         <CardHeader title="Matches" />
                         <CardBody>
-                            <p className="text-sm text-slate-600 mb-3">
+                            <p className="mb-4 text-sm leading-6 text-slate-500">
                                 Run the algorithm to find compatible candidates based on this
                                 customer's biodata and preferences.
                             </p>
@@ -150,7 +155,7 @@ export function CustomerDetailPage() {
                         </CardBody>
                     </Card>
 
-                    <Card>
+                    <Card className="rounded-2xl">
                         <CardHeader title="Journey Status" />
                         <CardBody>
                             <Select
@@ -170,23 +175,25 @@ export function CustomerDetailPage() {
                         </CardBody>
                     </Card>
 
-                    <Card>
+                    <Card className="rounded-2xl">
                         <CardHeader title="Sent Matches" />
                         <CardBody>
                             <SentMatchesPanel customerId={customer.id} />
                         </CardBody>
                     </Card>
 
-                    <Card>
+                    <Card className="rounded-2xl">
                         <CardHeader title={`Notes (${customer.notes.length})`} />
                         <CardBody className="space-y-3">
                             <div>
+                                <label htmlFor="customer-note" className="mb-2 block text-[11px] font-semibold uppercase tracking-wider text-slate-400">Private client note</label>
                                 <textarea
+                                    id="customer-note"
                                     value={noteText}
                                     onChange={(e) => setNoteText(e.target.value)}
                                     placeholder="Add a meeting or call note…"
                                     rows={3}
-                                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+                                    className="w-full rounded-xl border border-slate-300 px-3 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
                                 />
                                 <div className="flex justify-end mt-2">
                                     <Button
@@ -198,7 +205,7 @@ export function CustomerDetailPage() {
                                     </Button>
                                 </div>
                                 {noteMutation.isError && (
-                                    <p className="text-xs text-red-600 mt-1">
+                                    <p role="alert" className="mt-1 text-xs text-red-600">
                                         Could not save note.
                                     </p>
                                 )}

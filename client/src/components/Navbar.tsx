@@ -11,21 +11,12 @@ export function Navbar() {
     ];
 
     return (
-        <nav className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur print:hidden">
+        <>
+            <style>{'@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");'}</style>
+            <nav className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur print:hidden">
             <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
                 <Link to="/" className="flex items-center gap-3">
-                    <svg viewBox="0 0 40 40" className="h-10 w-10" aria-label="Pairwise">
-                        <defs>
-                            <linearGradient id="pairwise-gradient" x1="0" x2="1">
-                                <stop offset="0" stopColor="#2563eb" />
-                                <stop offset="1" stopColor="#ec4899" />
-                            </linearGradient>
-                        </defs>
-                        <circle cx="20" cy="20" r="19" fill="url(#pairwise-gradient)" />
-                        <circle cx="15" cy="14" r="4" fill="white" />
-                        <circle cx="25" cy="14" r="4" fill="white" />
-                        <path d="M9 29c1-5 4-7 7-7s5 2 6 7M18 29c1-5 4-7 7-7s5 2 6 7" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-                    </svg>
+                    <img src="/pairwise-logo.png" alt="Pairwise" className="h-10 w-10 rounded-xl object-cover" />
                     <span className="hidden text-sm font-semibold text-slate-900 sm:block">Pairwise Matchmaker</span>
                 </Link>
                 <div className="flex items-center gap-1">
@@ -50,6 +41,7 @@ export function Navbar() {
                     </button>
                 </div>
             </div>
-        </nav>
+            </nav>
+        </>
     );
 }
