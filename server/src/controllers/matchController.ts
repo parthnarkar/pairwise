@@ -431,12 +431,12 @@ export async function getGlobalMatchHistory(req: Request, res: Response) {
 
     const [actions, revocations] = await Promise.all([
         MatchAction.find({ matchmakerId })
-            .populate('customerId', 'firstName lastName city gender dateOfBirth height maritalStatus education profession background')
-            .populate('candidateId', 'firstName lastName city gender dateOfBirth height maritalStatus education profession background')
+            .populate('customerId')
+            .populate('candidateId')
             .lean(),
         MatchRevocation.find({ matchmakerId })
-            .populate('customerId', 'firstName lastName city gender dateOfBirth height maritalStatus education profession background')
-            .populate('candidateId', 'firstName lastName city gender dateOfBirth height maritalStatus education profession background')
+            .populate('customerId')
+            .populate('candidateId')
             .lean(),
     ]);
 
@@ -456,10 +456,42 @@ export async function getGlobalMatchHistory(req: Request, res: Response) {
             }
             : null;
 
+    const scoreForHistory = (
+        storedScore: unknown,
+        customer: any,
+        candidate: any
+    ): number | null => {
+        if (typeof storedScore === 'number' && Number.isFinite(storedScore)) {
+            return storedScore;
+        }
+        const canScore = [customer, candidate].every((person) =>
+            person &&
+            person.dateOfBirth &&
+            person.height &&
+            person.city &&
+            person.country &&
+            person.profession?.income !== undefined &&
+            person.education?.undergraduateCollege &&
+            person.lifestyle?.drinking &&
+            person.lifestyle?.smoking &&
+            person.lifestyle?.diet &&
+            person.preferences?.wantKids &&
+            person.preferences?.openToRelocate &&
+            person.preferences?.openToPets
+        );
+        if (!canScore) return null;
+        return Math.round(
+            scoreMatch(
+                customer as unknown as EngineCustomer,
+                candidate as unknown as EngineCustomer
+            ).score
+        );
+    };
+
     const history = [
         ...actions.map((a: any) => ({
             id: String(a._id),
-            compatibilityScore: a.compatibilityScore,
+            compatibilityScore: scoreForHistory(a.compatibilityScore, a.customerId, a.candidateId),
             status: a.status,
             matchRationale: a.matchRationale,
             personalizedIntro: a.personalizedIntro,
@@ -472,7 +504,7 @@ export async function getGlobalMatchHistory(req: Request, res: Response) {
         })),
         ...revocations.map((r: any) => ({
             id: String(r._id),
-            compatibilityScore: r.compatibilityScore,
+            compatibilityScore: scoreForHistory(r.compatibilityScore, r.customerId, r.candidateId),
             status: 'Revoked',
             matchRationale: r.matchRationale,
             personalizedIntro: r.personalizedIntro,

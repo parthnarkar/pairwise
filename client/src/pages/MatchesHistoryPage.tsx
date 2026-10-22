@@ -57,7 +57,7 @@ function MatchDetails({ entry, onClose }: { entry: IGlobalMatchHistoryEntry; onC
                     <div className="rounded-xl border border-blue-100 bg-blue-50 p-5">
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <h3 className="font-semibold text-slate-900">Compatibility assessment</h3>
-                            <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-blue-700">{entry.compatibilityScore}/100</span>
+                            <span className="rounded-full bg-white px-3 py-1 text-sm font-bold text-blue-700">{entry.compatibilityScore === null ? 'Score unavailable' : `${entry.compatibilityScore}/100`}</span>
                         </div>
                         <p className="mt-3 text-sm leading-6 text-slate-700">{entry.matchRationale}</p>
                     </div>
@@ -89,7 +89,11 @@ export function MatchesHistoryPage() {
         .filter((entry) => !status || entry.status === status)
         .filter((entry) => !from || entry.sentAt.slice(0, 10) >= from)
         .filter((entry) => !to || entry.sentAt.slice(0, 10) <= to)
-        .sort((a, b) => sort === 'score-high' ? b.compatibilityScore - a.compatibilityScore : sort === 'score-low' ? a.compatibilityScore - b.compatibilityScore : new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()), [history, query, status, from, to, sort]);
+        .sort((a, b) => sort === 'score-high'
+            ? (b.compatibilityScore ?? -1) - (a.compatibilityScore ?? -1)
+            : sort === 'score-low'
+                ? (a.compatibilityScore ?? 101) - (b.compatibilityScore ?? 101)
+                : new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()), [history, query, status, from, to, sort]);
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -109,7 +113,7 @@ export function MatchesHistoryPage() {
                 {isLoading && <p className="text-center text-sm text-slate-500">Loading history...</p>}
                 {error && <p className="text-center text-sm text-red-600">Could not load match history.</p>}
                 {!isLoading && !error && filtered.length === 0 && <div className="rounded-xl border border-slate-200 bg-white py-12 text-center"><History size={32} className="mx-auto mb-3 text-slate-300" /><p className="text-sm text-slate-500">No activity matches these filters.</p></div>}
-                {filtered.length > 0 && <div className="overflow-hidden rounded-xl border border-slate-200 bg-white"><table className="w-full text-left text-sm"><thead className="border-b border-slate-200 bg-slate-50"><tr><th className="px-4 py-3 font-medium text-slate-600">Customer</th><th className="px-4 py-3 font-medium text-slate-600">Matched with</th><th className="px-4 py-3 font-medium text-slate-600">Score</th><th className="px-4 py-3 font-medium text-slate-600">Date sent</th><th className="px-4 py-3 font-medium text-slate-600">Status</th></tr></thead><tbody className="divide-y divide-slate-100">{filtered.map((entry) => <tr key={entry.id} onClick={() => setSelected(entry)} className="cursor-pointer hover:bg-slate-50"><td className="px-4 py-3 font-medium text-slate-900">{entry.customer?.name || 'Unavailable'}</td><td className="px-4 py-3 text-slate-700">{entry.candidate?.name || 'Unavailable'}</td><td className="px-4 py-3"><span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">{entry.compatibilityScore}/100</span></td><td className="px-4 py-3 text-slate-600">{formatDateTime(entry.sentAt)}</td><td className="px-4 py-3"><span className={`rounded-full border px-2 py-1 text-xs ${statusStyle(entry.status)}`}>{entry.status}</span></td></tr>)}</tbody></table></div>}
+                {filtered.length > 0 && <div className="overflow-hidden rounded-xl border border-slate-200 bg-white"><table className="w-full text-left text-sm"><thead className="border-b border-slate-200 bg-slate-50"><tr><th className="px-4 py-3 font-medium text-slate-600">Customer</th><th className="px-4 py-3 font-medium text-slate-600">Matched with</th><th className="px-4 py-3 font-medium text-slate-600">Score</th><th className="px-4 py-3 font-medium text-slate-600">Date sent</th><th className="px-4 py-3 font-medium text-slate-600">Status</th></tr></thead><tbody className="divide-y divide-slate-100">{filtered.map((entry) => <tr key={entry.id} onClick={() => setSelected(entry)} className="cursor-pointer hover:bg-slate-50"><td className="px-4 py-3 font-medium text-slate-900">{entry.customer?.name || 'Unavailable'}</td><td className="px-4 py-3 text-slate-700">{entry.candidate?.name || 'Unavailable'}</td><td className="px-4 py-3"><span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">{entry.compatibilityScore === null ? 'Unavailable' : `${entry.compatibilityScore}/100`}</span></td><td className="px-4 py-3 text-slate-600">{formatDateTime(entry.sentAt)}</td><td className="px-4 py-3"><span className={`rounded-full border px-2 py-1 text-xs ${statusStyle(entry.status)}`}>{entry.status}</span></td></tr>)}</tbody></table></div>}
             </main>
             {selected && <MatchDetails entry={selected} onClose={() => setSelected(null)} />}
         </div>

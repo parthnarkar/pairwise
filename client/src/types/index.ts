@@ -156,7 +156,7 @@ export interface IMatchHistoryPerson {
     name: string;
     city: string;
     gender: string;
-    age: number;
+    age: number | null;
     height: number;
     maritalStatus: string;
     education: { undergraduateCollege: string; degree: string };
@@ -166,7 +166,7 @@ export interface IMatchHistoryPerson {
 
 export interface IGlobalMatchHistoryEntry {
     id: string;
-    compatibilityScore: number;
+    compatibilityScore: number | null;
     status: MatchActionStatus;
     matchRationale: string;
     personalizedIntro?: string;
