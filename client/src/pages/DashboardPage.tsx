@@ -14,6 +14,7 @@ import { Select } from '../components/ui/Select';
 import { MetricTile } from '../components/MetricTile';
 import { initials } from '../lib/format';
 import { JOURNEY_STATUSES, type JourneyStatus } from '../types';
+import { LoadingScreen } from '../components/LoadingScreen';
 
 export function DashboardPage() {
     const { matchmaker } = useAuth();
@@ -57,6 +58,10 @@ export function DashboardPage() {
         queryFn: fetchMatchStats,
         staleTime: 30_000,
     });
+
+    if (isLoading) {
+        return <LoadingScreen label="Loading your dashboard" />;
+    }
 
     return (
         <div className="min-h-screen bg-slate-50" style={{ fontFamily: 'Plus Jakarta Sans, Inter, system-ui, sans-serif' }}>

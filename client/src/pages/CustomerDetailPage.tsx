@@ -17,6 +17,7 @@ import { SentMatchesPanel } from '../components/SentMatchesPanel';
 import { SuggestedMatchesDrawer } from '../components/SuggestedMatchesDrawer';
 import { formatDateTime, formatINR, initials } from '../lib/format';
 import { JOURNEY_STATUSES, type JourneyStatus } from '../types';
+import { LoadingScreen } from '../components/LoadingScreen';
 
 export function CustomerDetailPage() {
     const { id = '' } = useParams();
@@ -65,11 +66,7 @@ export function CustomerDetailPage() {
     };
 
     if (isLoading) {
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-slate-50 text-sm text-slate-500">
-                Loading customer…
-            </div>
-        );
+        return <LoadingScreen label="Loading customer profile" />;
     }
     if (error || !customer) {
         return (

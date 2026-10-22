@@ -1,17 +1,14 @@
 import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { LoadingScreen } from './LoadingScreen';
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
     const { matchmaker, loading } = useAuth();
     const location = useLocation();
 
     if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center text-slate-500 text-sm">
-                Loading…
-            </div>
-        );
+        return <LoadingScreen label="Signing you in" />;
     }
 
     if (!matchmaker) {

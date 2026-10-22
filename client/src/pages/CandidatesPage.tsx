@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Users, MapPin } from 'lucide-react';
 import { listCandidatePool } from '../api/customers';
 import { initials } from '../lib/format';
+import { LoadingScreen } from '../components/LoadingScreen';
 
 export function CandidatesPage() {
     const { data: candidates = [], isLoading, error } = useQuery({
@@ -25,9 +26,7 @@ export function CandidatesPage() {
                 </div>
             </header>
             <main className="mx-auto max-w-7xl px-4 py-8 sm:px-8">
-                {isLoading && (
-                    <p className="text-center text-sm text-slate-500">Loading candidates...</p>
-                )}
+                {isLoading && <LoadingScreen label="Loading candidate pool" />}
                 {error && (
                     <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-600">
                         Could not load candidates.
